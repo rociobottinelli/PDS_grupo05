@@ -18,94 +18,51 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import com.pds.partidosapp.enums.NivelEnum;
 
+@Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final SecretKey secretKey;
-
-    public JwtAuthFilter(SecretKey secretKey) {
-        this.secretKey = secretKey;
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        try {
-            String token = extractJwtFromRequest(request);
+        String token = resolveToken(request);
 
-            if (token != null && validateToken(token)) {
-                String username = extractUsernameFromToken(token);
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            String email = jwtTokenProvider.getEmail(token);
+            String nombreUsuario = jwtTokenProvider.getNombreUsuario(token);
+            NivelEnum nivel = jwtTokenProvider.getNivel(token);
 
-                if (username != null) {
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            username, null, null);
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                }
-            }
-        } catch (Exception e) {
-            // Manejar excepciones de token inválido aquí
-            SecurityContextHolder.clearContext(); // Limpia el contexto de seguridad en caso de error
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage()); // Envia una respuesta de error 401
-            return; // Detiene la ejecución
+            var auth = new UsernamePasswordAuthenticationToken(email, null, null);
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String extractJwtFromRequest(HttpServletRequest request) {
-        // Extraer el token de la cabecera de autorización
-        String bearerToken = request.getHeader("Authorization");
-
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // Excluir "Bearer "
+    private String resolveToken(HttpServletRequest request) {
+        // Bearer token del header Authorization
+        String bearer = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
         }
+
+        // TODO: Agregar soporte para cookies siguiendo patrón TPO
+        // if (request.getCookies() != null) {
+        // for (var cookie : request.getCookies()) {
+        // if ("partidos-token".equals(cookie.getName())) {
+        // return cookie.getValue();
+        // }
+        // }
+        // }
 
         return null;
-    }
-
-    private boolean validateToken(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-
-            // Verifica la firma y la expiración del token
-            if (isTokenSignatureValid(claimsJws) && isTokenNotExpired(claimsJws.getBody().getExpiration())) {
-                return true;
-            }
-        } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
-        }
-
-        return false;
-    }
-
-    private boolean isTokenSignatureValid(Jws<Claims> claimsJws) {
-        // Verifica la firma del token con la clave secreta
-        try {
-            claimsJws.getBody(); // Esto lanzará una excepción si la firma es inválida
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean isTokenNotExpired(Date expirationDate) {
-        // Verifica si la fecha de expiración del token es posterior a la fecha actual
-        return expirationDate != null && !expirationDate.before(new Date());
-    }
-
-    public String extractUsernameFromToken(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
-
-            // Extraer el nombre de usuario de la carga útil del token
-            String username = claims.getSubject();
-            return username;
-        } catch (Exception e) {
-            // Manejar cualquier excepción que pueda ocurrir al analizar el token
-            return null;
-        }
     }
 
     @Override
@@ -114,4 +71,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
 }
-
