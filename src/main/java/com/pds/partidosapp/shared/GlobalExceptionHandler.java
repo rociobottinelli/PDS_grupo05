@@ -1,5 +1,6 @@
 package com.pds.partidosapp.shared;
 
+import com.pds.partidosapp.shared.exceptions.DuplicateException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
@@ -72,5 +73,11 @@ public class GlobalExceptionHandler {
     ex.printStackTrace(); // opcional: loguear el error
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno inesperado"));
+  }
+
+  @ExceptionHandler(DuplicateException.class)
+  public ResponseEntity<Map<String, Object>> handleDeporteDuplicado(DuplicateException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
   }
 }
