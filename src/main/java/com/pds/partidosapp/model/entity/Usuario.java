@@ -3,6 +3,8 @@ package com.pds.partidosapp.model.entity;
 import com.pds.partidosapp.enums.NivelEnum;
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "usuarios")
@@ -37,6 +39,10 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ubicacion_id")
     private Ubicacion ubicacion;
+
+    @ManyToMany(mappedBy = "jugadores")
+    private List<Partido> partidosJugados = new ArrayList<>();
+
 
     // TODO: Conectar con otras entidades cuando estén implementadas
     // List<UsuarioDeporte> deportes -> relación Many-to-Many

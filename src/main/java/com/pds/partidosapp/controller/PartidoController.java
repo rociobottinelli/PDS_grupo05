@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/partidos")
@@ -59,5 +60,21 @@ public class PartidoController {
 
         return usuario.getId();
 }
+
+    @GetMapping("/{id}/sugerencias")
+    public ResponseEntity<List<Long>> sugerirJugadores(
+        @PathVariable Long id,
+        @RequestParam String criterio,
+        @RequestHeader("Authorization") String authHeader) {
+
+        Long idUsuarioActual = extractUserIdFromToken(authHeader);
+
+        List<Usuario> sugeridos = partidoService.sugerirJugadores(id, criterio);
+
+        List<Long> ids = sugeridos.stream().map(Usuario::getId).toList();
+
+        return ResponseEntity.ok(ids);
+}
+
 }
 

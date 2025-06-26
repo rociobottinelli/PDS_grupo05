@@ -10,6 +10,9 @@ import com.pds.partidosapp.model.state.PartidoConfirmado;
 import com.pds.partidosapp.model.state.PartidoEnJuego;
 import com.pds.partidosapp.model.state.PartidoFinalizado;
 import com.pds.partidosapp.model.state.PartidoCancelado;
+import com.pds.partidosapp.model.strategy.EmparejamientoNivel;
+import com.pds.partidosapp.model.strategy.EmparejamientoCercania;
+import com.pds.partidosapp.model.strategy.EmparejamientoHistorial;
 import com.pds.partidosapp.repository.PartidoRepository;
 import com.pds.partidosapp.repository.UsuarioRepository;
 import com.pds.partidosapp.service.PartidoService;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,10 @@ public class PartidoServiceImpl implements PartidoService {
 
     private final PartidoRepository partidoRepository;
     private final UsuarioRepository usuarioRepository;
+
+    private final EmparejamientoNivel emparejamientoNivel;
+    private final EmparejamientoCercania emparejamientoCercania;
+    private final EmparejamientoHistorial emparejamientoHistorial;
 
     @Override
     public PartidoDTO crearPartido(PartidoDTO partidoDTO) {
@@ -73,6 +81,21 @@ public class PartidoServiceImpl implements PartidoService {
         Partido partidoActualizado = partidoRepository.save(partido);
 
         return mapToDTO(partidoActualizado);
+    }
+
+    @Override
+    public List<Usuario> sugerirJugadores(Long partidoId, String criterio) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado"));
+
+        List<Usuario> candidatos = usuarioRepository.findAll();
+
+        return switch (criterio.toLowerCase()) {
+            case "nivel" -> emparejamientoNivel.sugerirJugadores(partido, candidatos);
+            case "cercania" -> emparejamientoCercania.sugerirJugadores(partido, candidatos);
+            case "historial" -> emparejamientoHistorial.sugerirJugadores(partido, candidatos);
+            default -> throw new IllegalArgumentException("Criterio de emparejamiento desconocido: " + criterio);
+        };
     }
 
     private EstadoPartido getEstadoPartidoDesdeString(String estado) {
