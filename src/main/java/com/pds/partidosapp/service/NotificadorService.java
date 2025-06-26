@@ -19,7 +19,7 @@ public class NotificadorService implements INotificadorService {
      * 
      * @param adapter Adaptador para el envío de correos electrónicos
      */
-    @Autowired
+    @Autowired(required = false)
     public NotificadorService(IAdapterEmailNotification adapter) {
         this.adapter = adapter;
     }

@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.pds.partidosapp.model.state.EstadoPartido;
 
 @Entity
 @Table(name = "partidos")
@@ -53,4 +54,13 @@ public class Partido {
 
     // Cantidad de jugadores requeridos
     private Integer jugadoresRequeridos;
+
+    @Transient
+    private EstadoPartido estadoActual;
+
+    public void setEstadoActual(EstadoPartido nuevoEstado) {
+        this.estadoActual = nuevoEstado;
+        this.estado = nuevoEstado.nombreEstado();
+    }
+
 }

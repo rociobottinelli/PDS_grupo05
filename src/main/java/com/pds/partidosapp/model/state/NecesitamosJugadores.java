@@ -1,0 +1,39 @@
+package com.pds.partidosapp.model.state;
+
+import com.pds.partidosapp.model.entity.Partido;
+import com.pds.partidosapp.model.entity.Usuario;
+
+public class NecesitamosJugadores implements EstadoPartido {
+
+    @Override
+    public void aceptar(Partido partido, Usuario jugador) {
+        partido.getJugadores().add(jugador);
+
+        if (partido.getJugadores().size() >= partido.getJugadoresRequeridos()) {
+            partido.setEstadoActual(new PartidoArmado());
+            partido.setEstado("PARTIDO_ARMADO");
+        }
+    }
+
+    @Override
+    public void cancelar(Partido partido) {
+        partido.setEstadoActual(new PartidoCancelado());
+        partido.setEstado("PARTIDO_CANCELADO");
+    }
+
+    @Override
+    public void iniciar(Partido partido) {
+        throw new IllegalStateException("No se puede iniciar un partido que aún no está armado.");
+    }
+
+    @Override
+    public void finalizar(Partido partido) {
+        throw new IllegalStateException("No se puede finalizar un partido que aún no empezó.");
+    }
+
+    @Override
+    public String nombreEstado() {
+        return "NECESITAMOS_JUGADORES";
+    }
+}
+

@@ -8,8 +8,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-
-
 /**
  * Implementación del adaptador de correo electrónico utilizando JavaMail.
  * Proporciona funcionalidad para enviar correos electrónicos.
