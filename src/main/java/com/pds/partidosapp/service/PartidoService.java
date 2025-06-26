@@ -7,5 +7,8 @@ public interface PartidoService {
     PartidoDTO crearPartido(PartidoDTO partidoDTO);
     PartidoDTO getPartidoById(Long id);
     PartidoDTO aceptarPartido(Long partidoId, Long idUsuarioActual);
+    PartidoDTO cancelarPartido(Long partidoId, Long idUsuarioActual);
+    PartidoDTO iniciarPartido(Long partidoId, Long idUsuarioActual);
+    PartidoDTO finalizarPartido(Long partidoId, Long idUsuarioActual);
     List<Usuario> sugerirJugadores(Long partidoId, String criterio);
 }

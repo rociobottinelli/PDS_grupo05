@@ -98,6 +98,73 @@ public class PartidoServiceImpl implements PartidoService {
         };
     }
 
+    @Override
+    public PartidoDTO cancelarPartido(Long partidoId, Long idUsuarioActual) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado con ID: " + partidoId));
+
+        Usuario usuario = usuarioRepository.findById(idUsuarioActual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
+
+        // Solo el organizador puede cancelar
+        if (!partido.getOrganizador().getId().equals(usuario.getId())) {
+            throw new IllegalStateException("Solo el organizador puede cancelar el partido.");
+        }
+
+        partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
+
+        partido.getEstadoActual().cancelar(partido);
+
+        Partido partidoActualizado = partidoRepository.save(partido);
+
+        return mapToDTO(partidoActualizado);
+    }
+
+    @Override
+    public PartidoDTO iniciarPartido(Long partidoId, Long idUsuarioActual) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado con ID: " + partidoId));
+
+        Usuario usuario = usuarioRepository.findById(idUsuarioActual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
+
+        // Solo el organizador puede iniciar
+        if (!partido.getOrganizador().getId().equals(usuario.getId())) {
+            throw new IllegalStateException("Solo el organizador puede iniciar el partido.");
+        }
+
+        partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
+
+        partido.getEstadoActual().iniciar(partido);
+
+        Partido partidoActualizado = partidoRepository.save(partido);
+
+        return mapToDTO(partidoActualizado);
+    }
+
+    @Override
+    public PartidoDTO finalizarPartido(Long partidoId, Long idUsuarioActual) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado con ID: " + partidoId));
+
+        Usuario usuario = usuarioRepository.findById(idUsuarioActual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
+
+        // Solo el organizador puede finalizar el partido
+        if (!partido.getOrganizador().getId().equals(usuario.getId())) {
+            throw new IllegalStateException("Solo el organizador puede finalizar el partido.");
+        }
+
+        partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
+
+        partido.getEstadoActual().finalizar(partido);
+
+        Partido partidoActualizado = partidoRepository.save(partido);
+
+        return mapToDTO(partidoActualizado);
+    }
+
+
     private EstadoPartido getEstadoPartidoDesdeString(String estado) {
         switch (estado) {
             case "NECESITAMOS_JUGADORES":

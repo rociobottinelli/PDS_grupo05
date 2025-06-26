@@ -59,7 +59,7 @@ public class PartidoController {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
 
         return usuario.getId();
-}
+    }
 
     @GetMapping("/{id}/sugerencias")
     public ResponseEntity<List<Long>> sugerirJugadores(
@@ -74,7 +74,44 @@ public class PartidoController {
         List<Long> ids = sugeridos.stream().map(Usuario::getId).toList();
 
         return ResponseEntity.ok(ids);
-}
+    }
+
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<PartidoDTO> cancelarPartido(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long idUsuarioActual = extractUserIdFromToken(authHeader);
+
+        PartidoDTO partidoActualizado = partidoService.cancelarPartido(id, idUsuarioActual);
+
+        return ResponseEntity.ok(partidoActualizado);
+    }
+
+    @PutMapping("/{id}/iniciar")
+    public ResponseEntity<PartidoDTO> iniciarPartido(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long idUsuarioActual = extractUserIdFromToken(authHeader);
+
+        PartidoDTO partidoActualizado = partidoService.iniciarPartido(id, idUsuarioActual);
+
+        return ResponseEntity.ok(partidoActualizado);
+    }
+
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<PartidoDTO> finalizarPartido(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long idUsuarioActual = extractUserIdFromToken(authHeader);
+
+        PartidoDTO partidoActualizado = partidoService.finalizarPartido(id, idUsuarioActual);
+
+        return ResponseEntity.ok(partidoActualizado);
+    }
+
 
 }
 
