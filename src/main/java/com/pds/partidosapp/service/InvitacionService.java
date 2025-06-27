@@ -5,16 +5,9 @@ import com.pds.partidosapp.model.entity.Invitacion;
 import com.pds.partidosapp.repository.InvitacionRepository;
 import com.pds.partidosapp.dto.InvitacionRequestDTO;
 import com.pds.partidosapp.dto.InvitacionResponseDTO;
-import com.pds.partidosapp.enums.EstadoInvitacionEnum;
-import com.pds.partidosapp.model.entity.Invitacion;
-import com.pds.partidosapp.repository.InvitacionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio para gestionar las operaciones relacionadas con las invitaciones.
@@ -27,18 +20,6 @@ public class InvitacionService implements IInvitacionService {
 
     private final InvitacionRepository invitacionRepository;
 
-    @Override
-    public List<InvitacionResponseDTO> listarTodas() {
-        return invitacionRepository.findAll().stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public InvitacionResponseDTO buscarPorId(Long id) {
-        Invitacion invitacion = buscarInvitacionPorId(id);
-        return convertirADTO(invitacion);
-    }
 
     @Override
     @Transactional
@@ -63,26 +44,6 @@ public class InvitacionService implements IInvitacionService {
 
     @Override
     @Transactional
-    public InvitacionResponseDTO actualizar(Long id, InvitacionRequestDTO requestDTO) {
-        Invitacion invitacion = buscarInvitacionPorId(id);
-        
-        // Solo actualizamos los campos que se permiten modificar
-        if (requestDTO.getPartidoId() != null) {
-            invitacion.setIdPartido(requestDTO.getPartidoId());
-        }
-        if (requestDTO.getUsuarioId() != null) {
-            invitacion.setIdUsuario(requestDTO.getUsuarioId());
-        }
-        if (requestDTO.getEstadoInvitacion() != null) {
-            invitacion.setEstadoInvitacion(requestDTO.getEstadoInvitacion());
-        }
-        
-        Invitacion invitacionActualizada = invitacionRepository.save(invitacion);
-        return convertirADTO(invitacionActualizada);
-    }
-
-    @Override
-    @Transactional
     public void eliminar(Long id) {
         Invitacion invitacion = buscarInvitacionPorId(id);
         invitacionRepository.delete(invitacion);
@@ -102,22 +63,6 @@ public class InvitacionService implements IInvitacionService {
         Invitacion invitacion = buscarInvitacionPorId(idInvitacion);
         invitacion.setEstadoInvitacion(EstadoInvitacionEnum.RECHAZADO);
         invitacionRepository.save(invitacion);
-    }
-
-    @Override
-    @Transactional
-    public List<InvitacionResponseDTO> buscarPorPartidoId(Long partidoId) {
-        return invitacionRepository.findByIdPartido(partidoId).stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public List<InvitacionResponseDTO> buscarPorUsuarioId(Long usuarioId) {
-        return invitacionRepository.findByIdUsuario(usuarioId).stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
     }
 
     /**
