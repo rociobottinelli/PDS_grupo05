@@ -94,6 +94,7 @@ public class PartidoServiceImpl implements PartidoService {
 
         Usuario jugador = usuarioRepository.findById(idUsuarioActual)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
+        partido.attach(notificadorService);
 
         partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
 
@@ -130,6 +131,7 @@ public class PartidoServiceImpl implements PartidoService {
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede cancelar el partido.");
         }
+        partido.attach(notificadorService);
 
         partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
 
@@ -151,6 +153,7 @@ public class PartidoServiceImpl implements PartidoService {
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede iniciar el partido.");
         }
+        partido.attach(notificadorService);
 
         partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
 
@@ -172,6 +175,7 @@ public class PartidoServiceImpl implements PartidoService {
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede finalizar el partido.");
         }
+        partido.attach(notificadorService);
 
         partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
 
