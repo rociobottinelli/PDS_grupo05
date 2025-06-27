@@ -1,9 +1,11 @@
 package com.pds.partidosapp.service;
 
+import com.pds.partidosapp.dto.InvitacionRequestDTO;
 import com.pds.partidosapp.dto.UsuarioDTO;
+import com.pds.partidosapp.enums.EstadoInvitacionEnum;
 import com.pds.partidosapp.model.Notificacion;
 import com.pds.partidosapp.model.entity.Partido;
-import com.pds.partidosapp.shared.Observer;
+import com.pds.partidosapp.observer.Observer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +20,12 @@ public class NotificadorService implements INotificadorService, Observer {
 
     private final IAdapterEmailNotification adapter;
     private EstrategiaDeNotificacion estrategiaDeNotificacion;
+    private final static String ENDPOINT = "http://localhost:8081/api/invitaciones";
 
     @Autowired
     private IUsuarioService usuarioService;
+    @Autowired
+    private IInvitacionService invitacionService;
 
     /**
      * Constructor que inyecta el adaptador de notificación por correo electrónico.
@@ -68,7 +73,16 @@ public class NotificadorService implements INotificadorService, Observer {
             case "NECESITAMOS_JUGADORES" -> {
                 usuarioService.findUsuariosByDeporte(partido.getDeporte().getId(), null).forEach(usuario -> {
                     UsuarioDTO usuarioDTO = new UsuarioDTO(usuario.getNombreUsuario(), null, usuario.getEmail());
-                    Notificacion notificacion = new Notificacion(usuarioDTO, "Se creo un nuevo partido de tu deporte favorito");
+
+                    var invitacion = invitacionService.crear(new InvitacionRequestDTO(partido.getId(), usuario.getId(), EstadoInvitacionEnum.PENDIENTE));
+
+                    String params = "invitacionId=" + invitacion.getId();
+
+                    String msj = "Se creo un nuevo partido para tu deporte favorito.";
+                    msj += "\nAceptar invitacion: " + ENDPOINT + "/aceptar?" +  params;
+                    msj += "\nCancelar invitacion:" + ENDPOINT + "/rechazar?"+ params;
+
+                    Notificacion notificacion = new Notificacion(usuarioDTO, msj);
                     enviar(notificacion);
                 });
             }

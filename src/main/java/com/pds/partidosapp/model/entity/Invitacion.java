@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 /**
  * Entidad que representa una invitación a un partido en el sistema.
@@ -48,4 +52,20 @@ public class Invitacion {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoInvitacionEnum estadoInvitacion;
+    
+    /**
+     * Fecha y hora en que se creó la invitación.
+     * Se establece automáticamente al crear la entidad.
+     */
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
+    
+    /**
+     * Fecha y hora de la última actualización de la invitación.
+     * Se actualiza automáticamente al modificar la entidad.
+     */
+    @UpdateTimestamp
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
 }

@@ -4,12 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 import com.pds.partidosapp.model.state.EstadoPartido;
-import com.pds.partidosapp.shared.Observable;
-import com.pds.partidosapp.shared.Observer;
+import com.pds.partidosapp.observer.Observable;
+import com.pds.partidosapp.observer.Observer;
 
 @Entity
 @Table(name = "partidos")

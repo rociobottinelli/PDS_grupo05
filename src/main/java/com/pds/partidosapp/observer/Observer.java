@@ -1,4 +1,4 @@
-package com.pds.partidosapp.shared;
+package com.pds.partidosapp.observer;
 
 import com.pds.partidosapp.model.entity.Partido;
 
