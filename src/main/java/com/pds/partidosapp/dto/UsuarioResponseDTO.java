@@ -21,11 +21,11 @@ public class UsuarioResponseDTO {
         UbicacionDTO ubicacionDTO = null;
         if (usuario.getUbicacion() != null) {
             ubicacionDTO = UbicacionDTO.builder()
-                .latitud(usuario.getUbicacion().getLatitud())
-                .longitud(usuario.getUbicacion().getLongitud())
-                .build();
+                    .latitud(usuario.getUbicacion().getLatitud())
+                    .longitud(usuario.getUbicacion().getLongitud())
+                    .build();
         }
-        
+
         return UsuarioResponseDTO.builder()
                 .id(usuario.getId())
                 .nombreUsuario(usuario.getNombreUsuario())
