@@ -93,7 +93,9 @@ public class NotificadorService implements INotificadorService, Observer {
             case "PARTIDO_ARMADO","PARTIDO_CONFIRMADO","PARTIDO_CANCELADO", "PARTIDO_FINALIZADO", "PARTIDO_EN_JUEGO" -> {
                 partido.getJugadores().forEach(usuario -> {
                     UsuarioDTO usuarioDTO = new UsuarioDTO(usuario.getNombreUsuario(), null, usuario.getEmail());
-                    Notificacion notificacion = new Notificacion(usuarioDTO, "El partido " + partido.getId() + " cambio de estado a " + partido.getEstado());
+                    Notificacion notificacion = new Notificacion(usuarioDTO,
+                            "El partido de " + partido.getDeporte().getNombre() + " numero "
+                                    + partido.getId() + " cambio de estado a " + partido.getEstado());
                     enviar(notificacion);
                 });
             }
