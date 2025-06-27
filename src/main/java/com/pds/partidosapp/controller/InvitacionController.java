@@ -1,14 +1,9 @@
 package com.pds.partidosapp.controller;
 
 import com.pds.partidosapp.config.JwtTokenProvider;
-import com.pds.partidosapp.dto.InvitacionAccionDTO;
-import com.pds.partidosapp.dto.InvitacionRequestDTO;
-import com.pds.partidosapp.dto.InvitacionResponseDTO;
 import com.pds.partidosapp.model.entity.Invitacion;
-import com.pds.partidosapp.model.entity.Partido;
 import com.pds.partidosapp.model.entity.Usuario;
 import com.pds.partidosapp.repository.InvitacionRepository;
-import com.pds.partidosapp.repository.PartidoRepository;
 import com.pds.partidosapp.repository.UsuarioRepository;
 import com.pds.partidosapp.service.IInvitacionService;
 import com.pds.partidosapp.service.PartidoService;
@@ -16,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
