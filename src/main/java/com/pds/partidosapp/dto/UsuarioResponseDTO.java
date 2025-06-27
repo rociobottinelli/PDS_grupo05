@@ -15,8 +15,17 @@ public class UsuarioResponseDTO {
     private Integer edad;
     private NivelEnum nivelJuego;
     private Boolean activo;
+    private UbicacionDTO ubicacion;
 
     public static UsuarioResponseDTO from(Usuario usuario) {
+        UbicacionDTO ubicacionDTO = null;
+        if (usuario.getUbicacion() != null) {
+            ubicacionDTO = UbicacionDTO.builder()
+                .latitud(usuario.getUbicacion().getLatitud())
+                .longitud(usuario.getUbicacion().getLongitud())
+                .build();
+        }
+        
         return UsuarioResponseDTO.builder()
                 .id(usuario.getId())
                 .nombreUsuario(usuario.getNombreUsuario())
@@ -24,6 +33,7 @@ public class UsuarioResponseDTO {
                 .edad(usuario.getEdad())
                 .nivelJuego(usuario.getNivelJuego())
                 .activo(usuario.getActivo())
+                .ubicacion(ubicacionDTO)
                 .build();
     }
 }

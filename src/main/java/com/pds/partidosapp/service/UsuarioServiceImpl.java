@@ -5,8 +5,10 @@ import com.pds.partidosapp.dto.UpdateUsuarioDTO;
 import com.pds.partidosapp.dto.UsuarioResponseDTO;
 import com.pds.partidosapp.enums.NivelEnum;
 import com.pds.partidosapp.model.entity.Usuario;
+import com.pds.partidosapp.model.entity.Ubicacion;
 import com.pds.partidosapp.model.entity.UsuarioDeporte;
 import com.pds.partidosapp.repository.UsuarioRepository;
+import com.pds.partidosapp.repository.UbicacionRepository;
 import com.pds.partidosapp.repository.DeporteRepository;
 import com.pds.partidosapp.repository.UsuarioDeporteRepository;
 import com.pds.partidosapp.shared.exceptions.NotFoundException;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final UbicacionRepository ubicacionRepository;
     private final DeporteRepository deporteRepository;
     private final UsuarioDeporteRepository usuarioDeporteRepository;
     private final PasswordEncoder passwordEncoder;
@@ -84,6 +87,16 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuario.setNombreUsuario(updateUsuarioDTO.getNombreUsuario());
         }
 
+        // Manejar ubicación
+        if (updateUsuarioDTO.getUbicacionId() != null) {
+            Ubicacion ubicacion = ubicacionRepository.findById(updateUsuarioDTO.getUbicacionId())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Ubicación no encontrada con ID: " + updateUsuarioDTO.getUbicacionId()));
+            usuario.setUbicacion(ubicacion);
+        } else {
+            usuario.setUbicacion(null); // Remover ubicación si no se proporciona
+        }
+
         // Actualizar campos básicos
         usuario.setEdad(updateUsuarioDTO.getEdad());
         usuario.setNivelJuego(updateUsuarioDTO.getNivelJuego());
@@ -127,7 +140,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         if (!deporteRepository.existsById(deporteId)) {
             return List.of();
         }
-        
+
         List<Usuario> usuarios;
         if (nivel != null) {
             // Buscar usuarios por deporte y nivel específico
@@ -136,7 +149,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
             // Buscar todos los usuarios del deporte, sin filtrar por nivel
             usuarios = usuarioDeporteRepository.findUsuariosByDeporteId(deporteId);
         }
-        
+
         // Convertir a DTOs y devolver
         return usuarios.stream()
                 .filter(Usuario::getActivo) // Solo usuarios activos
@@ -157,18 +170,18 @@ public class UsuarioServiceImpl implements IUsuarioService {
         // Validar que el usuario existe y está activo
         Usuario usuario = usuarioRepository.findByIdAndActivoTrue(usuarioId)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado o inactivo con ID: " + usuarioId));
-        
+
         // Validar que el deporte existe
         if (!deporteRepository.existsById(deporteId)) {
             throw new NotFoundException("Deporte no encontrado con ID: " + deporteId);
         }
-        
+
         // Verificar si ya existe una relación activa entre el usuario y el deporte
         boolean yaExiste = usuarioDeporteRepository.existsByUsuarioIdAndDeporteIdAndActivoTrue(usuarioId, deporteId);
         if (yaExiste) {
             throw new IllegalArgumentException("El usuario ya tiene asignado este deporte");
         }
-        
+
         // Crear la relación UsuarioDeporte
         UsuarioDeporte usuarioDeporte = UsuarioDeporte.builder()
                 .usuario(usuario)
@@ -176,7 +189,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .nivelEnDeporte(nivelEnDeporte)
                 .activo(true)
                 .build();
-        
+
         // Guardar la relación
         usuarioDeporteRepository.save(usuarioDeporte);
     }
