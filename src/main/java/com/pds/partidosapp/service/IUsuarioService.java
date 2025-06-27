@@ -43,12 +43,11 @@ public interface IUsuarioService {
     /**
      * Agregar un deporte a un usuario
      * 
-     * @param usuarioId         ID del usuario
-     * @param deporteId         ID del deporte
-     * @param nivelEnDeporte    Nivel del usuario en ese deporte
-     * @param posicionPreferida Posición preferida (opcional)
+     * @param usuarioId      ID del usuario
+     * @param deporteId     ID del deporte
+     * @param nivelEnDeporte Nivel del usuario en ese deporte
      */
-    void agregarDeporteAUsuario(Long usuarioId, Long deporteId, NivelEnum nivelEnDeporte, String posicionPreferida);
+    void agregarDeporteAUsuario(Long usuarioId, Long deporteId, NivelEnum nivelEnDeporte);
 
     /**
      * Remover un deporte de un usuario (soft delete)

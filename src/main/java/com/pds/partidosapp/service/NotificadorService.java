@@ -1,18 +1,26 @@
 package com.pds.partidosapp.service;
 
+import com.pds.partidosapp.dto.UsuarioDTO;
 import com.pds.partidosapp.model.Notificacion;
+import com.pds.partidosapp.model.entity.Partido;
+import com.pds.partidosapp.shared.Observer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Servicio para el manejo de notificaciones.
  * Permite enviar notificaciones utilizando diferentes estrategias.
  */
 @Service
-public class NotificadorService implements INotificadorService {
+@Transactional
+public class NotificadorService implements INotificadorService, Observer {
 
     private final IAdapterEmailNotification adapter;
     private EstrategiaDeNotificacion estrategiaDeNotificacion;
+
+    @Autowired
+    private IUsuarioService usuarioService;
 
     /**
      * Constructor que inyecta el adaptador de notificación por correo electrónico.
@@ -20,8 +28,9 @@ public class NotificadorService implements INotificadorService {
      * @param adapter Adaptador para el envío de correos electrónicos
      */
     @Autowired(required = false)
-    public NotificadorService(IAdapterEmailNotification adapter) {
+    public NotificadorService(IAdapterEmailNotification adapter, IUsuarioService usuarioService) {
         this.adapter = adapter;
+        this.usuarioService = usuarioService;
     }
 
     /**
@@ -32,9 +41,13 @@ public class NotificadorService implements INotificadorService {
      */
     @Override
     public void enviar(Notificacion notificacion) {
-        if (estrategiaDeNotificacion != null) {
-            estrategiaDeNotificacion.enviar(notificacion);
-        }
+        //if (estrategiaDeNotificacion != null) {
+        //}
+        cambiarEstrategiaDeNotificacion(new NotificacionPorMail(adapter));
+        estrategiaDeNotificacion.enviar(notificacion);
+
+        cambiarEstrategiaDeNotificacion(new NotificarPorFirebase());
+        estrategiaDeNotificacion.enviar(notificacion);
     }
 
     /**
@@ -46,6 +59,32 @@ public class NotificadorService implements INotificadorService {
     public void cambiarEstrategiaDeNotificacion(EstrategiaDeNotificacion estrategia) {
         this.estrategiaDeNotificacion = estrategia;
     }
+    
+    @Override
+    public void update(Partido partido) {
+
+        //i. Se cree un partido nuevo para su deporte favorito.
+        switch (partido.getEstado()){
+            case "NECESITAMOS_JUGADORES" -> {
+                usuarioService.findUsuariosByDeporte(partido.getDeporte().getId(), null).forEach(usuario -> {
+                    UsuarioDTO usuarioDTO = new UsuarioDTO(usuario.getNombreUsuario(), null, usuario.getEmail());
+                    Notificacion notificacion = new Notificacion(usuarioDTO, "Se creo un nuevo partido de tu deporte favorito");
+                    enviar(notificacion);
+                });
+            }
+
+            //ii. Se unan suficientes jugadores y el partido pase a estado "Partido armado".
+            //iii. Se confirme el partido.
+            //iv. El partido cambie a estado "En juego", "Finalizado" o “Cancelado”.
+            case "PARTIDO_ARMADO","PARTIDO_CONFIRMADO","PARTIDO_CANCELADO", "PARTIDO_FINALIZADO", "PARTIDO_EN_JUEGO" -> {
+                partido.getJugadores().forEach(usuario -> {
+                    UsuarioDTO usuarioDTO = new UsuarioDTO(usuario.getNombreUsuario(), null, usuario.getEmail());
+                    Notificacion notificacion = new Notificacion(usuarioDTO, "El partido " + partido.getId() + " cambio de estado a " + partido.getEstado());
+                    enviar(notificacion);
+                });
+            }
+        }
+    }
 
     /**
      * Obtiene la estrategia de notificación actual.
@@ -56,4 +95,6 @@ public class NotificadorService implements INotificadorService {
     public EstrategiaDeNotificacion getEstrategiaDeNotificacion() {
         return estrategiaDeNotificacion;
     }
+    
+
 }

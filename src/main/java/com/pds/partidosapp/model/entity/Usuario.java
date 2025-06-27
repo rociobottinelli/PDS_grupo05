@@ -45,8 +45,13 @@ public class Usuario {
 
 
     // TODO: Conectar con otras entidades cuando estén implementadas
-    // List<UsuarioDeporte> deportes -> relación Many-to-Many
+    @ManyToMany
+    @JoinTable(
+        name = "usuario_deportes",
+        joinColumns = @JoinColumn(name = "usuario_id"),
+        inverseJoinColumns = @JoinColumn(name = "deporte_id")
+    )
+    private List<Deporte> deportes;
     // List<Partido> partidos -> para historial
-    // List<Equipo> equipos -> Many-to-Many
     // List<Invitacion> invitaciones -> One-to-Many
 }

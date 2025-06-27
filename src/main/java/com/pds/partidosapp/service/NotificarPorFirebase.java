@@ -21,7 +21,5 @@ public class NotificarPorFirebase implements EstrategiaDeNotificacion {
         log.info("Notificación enviada por Firebase al usuario: {}", 
                 notificacion.getUsuario().getMail());
         log.info("Mensaje: {}", notificacion.getMensaje());
-        
-        System.out.println("Notificación enviada por Firebase");
     }
 }

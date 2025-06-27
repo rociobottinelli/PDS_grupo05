@@ -29,6 +29,7 @@ public class AdapterJavaMail implements IAdapterEmailNotification {
 
     @Override
     public boolean sendEmail(String toEmail, String subject, String content, boolean isHtmlContent) throws Exception {
+
         if (!StringUtils.hasText(toEmail)) {
             throw new IllegalArgumentException("El correo electrónico del destinatario no puede estar vacío");
         }

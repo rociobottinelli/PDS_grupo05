@@ -5,7 +5,10 @@ import com.pds.partidosapp.dto.UpdateUsuarioDTO;
 import com.pds.partidosapp.dto.UsuarioResponseDTO;
 import com.pds.partidosapp.enums.NivelEnum;
 import com.pds.partidosapp.model.entity.Usuario;
+import com.pds.partidosapp.model.entity.UsuarioDeporte;
 import com.pds.partidosapp.repository.UsuarioRepository;
+import com.pds.partidosapp.repository.DeporteRepository;
+import com.pds.partidosapp.repository.UsuarioDeporteRepository;
 import com.pds.partidosapp.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final DeporteRepository deporteRepository;
+    private final UsuarioDeporteRepository usuarioDeporteRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -118,9 +123,25 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> findUsuariosByDeporte(Long deporteId, NivelEnum nivel) {
-        // TODO: Implementar búsqueda de usuarios por deporte
-        // Necesita: DeporteRepository, UsuarioDeporteRepository
-        throw new UnsupportedOperationException("Método pendiente de implementación: findUsuariosByDeporte");
+        // Verificar que el deporte exista
+        if (!deporteRepository.existsById(deporteId)) {
+            return List.of();
+        }
+        
+        List<Usuario> usuarios;
+        if (nivel != null) {
+            // Buscar usuarios por deporte y nivel específico
+            usuarios = usuarioDeporteRepository.findUsuariosByDeporteIdAndNivel(deporteId, nivel);
+        } else {
+            // Buscar todos los usuarios del deporte, sin filtrar por nivel
+            usuarios = usuarioDeporteRepository.findUsuariosByDeporteId(deporteId);
+        }
+        
+        // Convertir a DTOs y devolver
+        return usuarios.stream()
+                .filter(Usuario::getActivo) // Solo usuarios activos
+                .map(UsuarioResponseDTO::from)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -132,13 +153,32 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     @Override
-    public void agregarDeporteAUsuario(Long usuarioId, Long deporteId, NivelEnum nivelEnDeporte,
-            String posicionPreferida) {
-        // TODO: Implementar agregar deporte a usuario
-        // Necesita: DeporteRepository, UsuarioDeporteRepository
-        // Validar que el usuario y deporte existan y estén activos
-        // Crear UsuarioDeporte con los datos proporcionados
-        throw new UnsupportedOperationException("Método pendiente de implementación: agregarDeporteAUsuario");
+    public void agregarDeporteAUsuario(Long usuarioId, Long deporteId, NivelEnum nivelEnDeporte) {
+        // Validar que el usuario existe y está activo
+        Usuario usuario = usuarioRepository.findByIdAndActivoTrue(usuarioId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado o inactivo con ID: " + usuarioId));
+        
+        // Validar que el deporte existe
+        if (!deporteRepository.existsById(deporteId)) {
+            throw new NotFoundException("Deporte no encontrado con ID: " + deporteId);
+        }
+        
+        // Verificar si ya existe una relación activa entre el usuario y el deporte
+        boolean yaExiste = usuarioDeporteRepository.existsByUsuarioIdAndDeporteIdAndActivoTrue(usuarioId, deporteId);
+        if (yaExiste) {
+            throw new IllegalArgumentException("El usuario ya tiene asignado este deporte");
+        }
+        
+        // Crear la relación UsuarioDeporte
+        UsuarioDeporte usuarioDeporte = UsuarioDeporte.builder()
+                .usuario(usuario)
+                .deporteId(deporteId)
+                .nivelEnDeporte(nivelEnDeporte)
+                .activo(true)
+                .build();
+        
+        // Guardar la relación
+        usuarioDeporteRepository.save(usuarioDeporte);
     }
 
     @Override

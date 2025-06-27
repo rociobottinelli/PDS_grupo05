@@ -1,6 +1,7 @@
 package com.pds.partidosapp.service;
 
 import com.pds.partidosapp.dto.PartidoDTO;
+import com.pds.partidosapp.model.entity.Deporte;
 import com.pds.partidosapp.model.entity.Partido;
 import com.pds.partidosapp.model.entity.Usuario;
 import com.pds.partidosapp.model.state.EstadoPartido;
@@ -19,6 +20,8 @@ import com.pds.partidosapp.repository.DeporteRepository;
 import com.pds.partidosapp.service.PartidoService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -36,27 +39,38 @@ public class PartidoServiceImpl implements PartidoService {
     private final EmparejamientoCercania emparejamientoCercania;
     private final EmparejamientoHistorial emparejamientoHistorial;
 
+    @Autowired
+    private NotificadorService notificadorService;
+
     @Override
     public PartidoDTO crearPartido(PartidoDTO partidoDTO) {
+        // Validar que el organizador existe
         Usuario organizador = usuarioRepository.findById(partidoDTO.getOrganizadorId())
                 .orElseThrow(() -> new EntityNotFoundException("Organizador no encontrado con ID: " + partidoDTO.getOrganizadorId()));
 
+        // Validar que el deporte existe
+        Deporte deporte = deporteRepository.findById(partidoDTO.getDeporteId())
+                .orElseThrow(() -> new EntityNotFoundException("Deporte no encontrado con ID: " + partidoDTO.getDeporteId()));
+
+        // Crear el partido sin notificaciones iniciales
         Partido partido = Partido.builder()
                 .organizador(organizador)
                 .estado(partidoDTO.getEstado())
                 .fechaHora(partidoDTO.getFechaHora())
                 .jugadoresRequeridos(partidoDTO.getJugadoresRequeridos())
                 .jugadores(new ArrayList<>())
-                .deporte(deporteRepository.findById(partidoDTO.getDeporteId())
-                        .orElseThrow(() -> new EntityNotFoundException("Deporte no encontrado con ID: " + partidoDTO.getDeporteId())))
+                .deporte(deporte)
                 .ubicacion(organizador.getUbicacion())
                 .build();
 
-        // Opcional: agregar el organizador como primer jugador automáticamente
+        // Agregar el organizador como primer jugador
         partido.getJugadores().add(organizador);
         partido.setEstadoActual(new NecesitamosJugadores());
 
+        // Guardar el partido para obtener un ID
         Partido partidoGuardado = partidoRepository.save(partido);
+        partidoGuardado.attach(notificadorService);
+        partidoGuardado.notificar();
 
         return mapToDTO(partidoGuardado);
     }

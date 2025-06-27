@@ -47,20 +47,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        // Bearer token del header Authorization
+        // Check Authorization header first
         String bearer = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
 
-        // TODO: Agregar soporte para cookies siguiendo patrón TPO
-        // if (request.getCookies() != null) {
-        // for (var cookie : request.getCookies()) {
-        // if ("partidos-token".equals(cookie.getName())) {
-        // return cookie.getValue();
-        // }
-        // }
-        // }
+        // Check for token in cookies
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("partidos-token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
 
         return null;
     }
