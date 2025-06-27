@@ -10,17 +10,18 @@ import java.util.List;
 @Component
 public class EmparejamientoHistorial implements Emparejamiento {
 
-        @Override
-        public List<Usuario> sugerirJugadores(Partido partido, List<Usuario> candidatos) {
-                // Usar el campo simple de cantidad de partidos
-                int partidosOrganizador = partido.getOrganizador().getCantidadPartidosJugados();
+    @Override
+    public List<Usuario> sugerirJugadores(Partido partido, List<Usuario> candidatos) {
+        int partidosOrganizador = partido.getOrganizador().getPartidosJugados() != null
+                ? partido.getOrganizador().getPartidosJugados().size()
+                : 0;
 
-                return candidatos.stream()
-                                .filter(c -> !partido.getJugadores().contains(c)) // Evitar proponer jugadores ya en el
-                                                                                  // partido
-                                .filter(c -> c.getActivo()) // Solo usuarios activos
-                                .sorted(Comparator.comparingInt(c -> Math.abs(
-                                                c.getCantidadPartidosJugados() - partidosOrganizador)))
-                                .toList();
-        }
+        return candidatos.stream()
+                .filter(c -> !partido.getJugadores().contains(c)) // Evitar proponer jugadores ya en el partido
+                .sorted(Comparator.comparingInt(c -> Math.abs(
+                        (c.getPartidosJugados() != null ? c.getPartidosJugados().size() : 0) - partidosOrganizador)))
+                .toList();
+    }
 }
+
+

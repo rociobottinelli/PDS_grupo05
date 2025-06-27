@@ -10,7 +10,6 @@ import com.pds.partidosapp.model.entity.Usuario;
 public class UsuarioInfoDTO {
   private Long id;
   private String nombreUsuario;
-  private Integer cantidadPartidosJugados;
 
   public static UsuarioInfoDTO from(Usuario usuario) {
     if (usuario == null)
@@ -19,7 +18,6 @@ public class UsuarioInfoDTO {
     return UsuarioInfoDTO.builder()
         .id(usuario.getId())
         .nombreUsuario(usuario.getNombreUsuario())
-        .cantidadPartidosJugados(usuario.getCantidadPartidosJugados())
         .build();
   }
 }
