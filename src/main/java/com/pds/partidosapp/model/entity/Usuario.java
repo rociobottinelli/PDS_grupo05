@@ -35,23 +35,14 @@ public class Usuario {
     @Builder.Default
     private Boolean activo = true;
 
-    // Relación con Ubicacion
+    @Builder.Default
+    private Integer cantidadPartidosJugados = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ubicacion_id")
     private Ubicacion ubicacion;
 
-    @ManyToMany(mappedBy = "jugadores")
-    private List<Partido> partidosJugados = new ArrayList<>();
-
-
-    // TODO: Conectar con otras entidades cuando estén implementadas
     @ManyToMany
-    @JoinTable(
-        name = "usuario_deportes",
-        joinColumns = @JoinColumn(name = "usuario_id"),
-        inverseJoinColumns = @JoinColumn(name = "deporte_id")
-    )
+    @JoinTable(name = "usuario_deportes", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "deporte_id"))
     private List<Deporte> deportes;
-    // List<Partido> partidos -> para historial
-    // List<Invitacion> invitaciones -> One-to-Many
 }
