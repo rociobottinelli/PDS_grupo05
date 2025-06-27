@@ -56,6 +56,12 @@ public class GlobalExceptionHandler {
         .body(buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
   }
 
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(buildResponse(HttpStatus.CONFLICT, ex.getMessage()));
+  }
+
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<Map<String, Object>> handleUnauthorized(BadCredentialsException ex) {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -78,6 +84,6 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DuplicateException.class)
   public ResponseEntity<Map<String, Object>> handleDeporteDuplicado(DuplicateException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
+        .body(buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
   }
 }

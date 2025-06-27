@@ -1,6 +1,8 @@
 package com.pds.partidosapp.controller;
 
 import com.pds.partidosapp.dto.PartidoDTO;
+import com.pds.partidosapp.dto.PartidoResponseDTO;
+import com.pds.partidosapp.dto.UsuarioInfoDTO;
 import com.pds.partidosapp.service.PartidoService;
 import com.pds.partidosapp.repository.UsuarioRepository;
 import com.pds.partidosapp.model.entity.Usuario;
@@ -22,27 +24,30 @@ public class PartidoController {
     private final PartidoService partidoService;
 
     @PostMapping
-    public ResponseEntity<PartidoDTO> crearPartido(@Valid @RequestBody PartidoDTO partidoDTO) {
+    public ResponseEntity<PartidoResponseDTO> crearPartido(@Valid @RequestBody PartidoDTO partidoDTO) {
         PartidoDTO partidoCreado = partidoService.crearPartido(partidoDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(partidoCreado);
+        PartidoResponseDTO partidoDetallado = partidoService.getPartidoWithDetails(partidoCreado.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(partidoDetallado);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PartidoDTO> getPartido(@PathVariable Long id) {
-        PartidoDTO partido = partidoService.getPartidoById(id);
+    public ResponseEntity<PartidoResponseDTO> getPartido(@PathVariable Long id) {
+        PartidoResponseDTO partido = partidoService.getPartidoWithDetails(id);
         return ResponseEntity.ok(partido);
     }
 
     @PostMapping("/{id}/aceptar")
-    public ResponseEntity<PartidoDTO> aceptarPartido(
+    public ResponseEntity<PartidoResponseDTO> aceptarPartido(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
         Long idUsuarioActual = extractUserIdFromToken(authHeader);
 
-        PartidoDTO partidoActualizado = partidoService.aceptarPartido(id, idUsuarioActual);
+        partidoService.aceptarPartido(id, idUsuarioActual);
 
-        return ResponseEntity.ok(partidoActualizado);
+        PartidoResponseDTO partidoDetallado = partidoService.getPartidoWithDetails(id);
+
+        return ResponseEntity.ok(partidoDetallado);
     }
 
     @Autowired
@@ -62,56 +67,58 @@ public class PartidoController {
     }
 
     @GetMapping("/{id}/sugerencias")
-    public ResponseEntity<List<Long>> sugerirJugadores(
-        @PathVariable Long id,
-        @RequestParam String criterio,
-        @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<UsuarioInfoDTO>> sugerirJugadores(
+            @PathVariable Long id,
+            @RequestParam String criterio,
+            @RequestHeader("Authorization") String authHeader) {
 
         Long idUsuarioActual = extractUserIdFromToken(authHeader);
 
-        List<Usuario> sugeridos = partidoService.sugerirJugadores(id, criterio);
+        List<UsuarioInfoDTO> sugeridos = partidoService.sugerirJugadoresWithNames(id, criterio);
 
-        List<Long> ids = sugeridos.stream().map(Usuario::getId).toList();
-
-        return ResponseEntity.ok(ids);
+        return ResponseEntity.ok(sugeridos);
     }
 
     @PutMapping("/{id}/cancelar")
-    public ResponseEntity<PartidoDTO> cancelarPartido(
+    public ResponseEntity<PartidoResponseDTO> cancelarPartido(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
         Long idUsuarioActual = extractUserIdFromToken(authHeader);
 
-        PartidoDTO partidoActualizado = partidoService.cancelarPartido(id, idUsuarioActual);
+        partidoService.cancelarPartido(id, idUsuarioActual);
 
-        return ResponseEntity.ok(partidoActualizado);
+        PartidoResponseDTO partidoDetallado = partidoService.getPartidoWithDetails(id);
+
+        return ResponseEntity.ok(partidoDetallado);
     }
 
     @PutMapping("/{id}/iniciar")
-    public ResponseEntity<PartidoDTO> iniciarPartido(
+    public ResponseEntity<PartidoResponseDTO> iniciarPartido(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
         Long idUsuarioActual = extractUserIdFromToken(authHeader);
 
-        PartidoDTO partidoActualizado = partidoService.iniciarPartido(id, idUsuarioActual);
+        partidoService.iniciarPartido(id, idUsuarioActual);
 
-        return ResponseEntity.ok(partidoActualizado);
+        PartidoResponseDTO partidoDetallado = partidoService.getPartidoWithDetails(id);
+
+        return ResponseEntity.ok(partidoDetallado);
     }
 
     @PutMapping("/{id}/finalizar")
-    public ResponseEntity<PartidoDTO> finalizarPartido(
+    public ResponseEntity<PartidoResponseDTO> finalizarPartido(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
         Long idUsuarioActual = extractUserIdFromToken(authHeader);
 
-        PartidoDTO partidoActualizado = partidoService.finalizarPartido(id, idUsuarioActual);
+        partidoService.finalizarPartido(id, idUsuarioActual);
 
-        return ResponseEntity.ok(partidoActualizado);
+        PartidoResponseDTO partidoDetallado = partidoService.getPartidoWithDetails(id);
+
+        return ResponseEntity.ok(partidoDetallado);
     }
 
-
 }
-

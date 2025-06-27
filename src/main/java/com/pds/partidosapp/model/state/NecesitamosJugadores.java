@@ -7,6 +7,14 @@ public class NecesitamosJugadores implements EstadoPartido {
 
     @Override
     public void aceptar(Partido partido, Usuario jugador) {
+        // Verificar si el jugador ya está inscrito en el partido
+        boolean yaEstaInscrito = partido.getJugadores().stream()
+                .anyMatch(j -> j.getId().equals(jugador.getId()));
+
+        if (yaEstaInscrito) {
+            throw new IllegalStateException("El jugador ya está inscrito en este partido");
+        }
+
         partido.getJugadores().add(jugador);
 
         if (partido.getJugadores().size() >= partido.getJugadoresRequeridos()) {
@@ -36,4 +44,3 @@ public class NecesitamosJugadores implements EstadoPartido {
         return "NECESITAMOS_JUGADORES";
     }
 }
-

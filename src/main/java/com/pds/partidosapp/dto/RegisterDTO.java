@@ -1,6 +1,7 @@
 package com.pds.partidosapp.dto;
 
 import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import lombok.Data;
 import com.pds.partidosapp.enums.NivelEnum;
 
@@ -26,4 +27,8 @@ public class RegisterDTO {
 
   @NotNull(message = "El nivel de juego es obligatorio")
   private NivelEnum nivelJuego;
+
+  // Ubicación opcional en el registro
+  @Valid
+  private UbicacionDTO ubicacion;
 }
