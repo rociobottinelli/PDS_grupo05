@@ -1,6 +1,10 @@
 package com.pds.partidosapp.service;
 
 import com.pds.partidosapp.dto.PartidoDTO;
+import com.pds.partidosapp.dto.PartidoResponseDTO;
+import com.pds.partidosapp.dto.UsuarioInfoDTO;
+import com.pds.partidosapp.dto.DeporteInfoDTO;
+import com.pds.partidosapp.dto.UbicacionDTO;
 import com.pds.partidosapp.model.entity.Deporte;
 import com.pds.partidosapp.model.entity.Partido;
 import com.pds.partidosapp.model.entity.Usuario;
@@ -44,15 +48,14 @@ public class PartidoServiceImpl implements PartidoService {
 
     @Override
     public PartidoDTO crearPartido(PartidoDTO partidoDTO) {
-        // Validar que el organizador existe
         Usuario organizador = usuarioRepository.findById(partidoDTO.getOrganizadorId())
-                .orElseThrow(() -> new EntityNotFoundException("Organizador no encontrado con ID: " + partidoDTO.getOrganizadorId()));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Organizador no encontrado con ID: " + partidoDTO.getOrganizadorId()));
 
-        // Validar que el deporte existe
         Deporte deporte = deporteRepository.findById(partidoDTO.getDeporteId())
-                .orElseThrow(() -> new EntityNotFoundException("Deporte no encontrado con ID: " + partidoDTO.getDeporteId()));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Deporte no encontrado con ID: " + partidoDTO.getDeporteId()));
 
-        // Crear el partido sin notificaciones iniciales
         Partido partido = Partido.builder()
                 .organizador(organizador)
                 .estado(partidoDTO.getEstado())
@@ -63,11 +66,9 @@ public class PartidoServiceImpl implements PartidoService {
                 .ubicacion(organizador.getUbicacion())
                 .build();
 
-        // Agregar el organizador como primer jugador
         partido.getJugadores().add(organizador);
         partido.setEstadoActual(new NecesitamosJugadores());
 
-        // Guardar el partido para obtener un ID
         Partido partidoGuardado = partidoRepository.save(partido);
         partidoGuardado.attach(notificadorService);
         partidoGuardado.notificar();
@@ -83,7 +84,6 @@ public class PartidoServiceImpl implements PartidoService {
         return mapToDTO(partido);
     }
 
-        
     @Override
     public PartidoDTO aceptarPartido(Long partidoId, Long idUsuarioActual) {
         Partido partido = partidoRepository.findById(partidoId)
@@ -92,7 +92,6 @@ public class PartidoServiceImpl implements PartidoService {
         Usuario jugador = usuarioRepository.findById(idUsuarioActual)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
 
-        // Inicializar el estado actual basado en el campo persistido
         partido.setEstadoActual(getEstadoPartidoDesdeString(partido.getEstado()));
 
         partido.getEstadoActual().aceptar(partido, jugador);
@@ -125,7 +124,6 @@ public class PartidoServiceImpl implements PartidoService {
         Usuario usuario = usuarioRepository.findById(idUsuarioActual)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
 
-        // Solo el organizador puede cancelar
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede cancelar el partido.");
         }
@@ -147,7 +145,6 @@ public class PartidoServiceImpl implements PartidoService {
         Usuario usuario = usuarioRepository.findById(idUsuarioActual)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
 
-        // Solo el organizador puede iniciar
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede iniciar el partido.");
         }
@@ -169,7 +166,6 @@ public class PartidoServiceImpl implements PartidoService {
         Usuario usuario = usuarioRepository.findById(idUsuarioActual)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuarioActual));
 
-        // Solo el organizador puede finalizar el partido
         if (!partido.getOrganizador().getId().equals(usuario.getId())) {
             throw new IllegalStateException("Solo el organizador puede finalizar el partido.");
         }
@@ -182,7 +178,6 @@ public class PartidoServiceImpl implements PartidoService {
 
         return mapToDTO(partidoActualizado);
     }
-
 
     private EstadoPartido getEstadoPartidoDesdeString(String estado) {
         switch (estado) {
@@ -203,6 +198,22 @@ public class PartidoServiceImpl implements PartidoService {
         }
     }
 
+    @Override
+    public PartidoResponseDTO getPartidoWithDetails(Long id) {
+        Partido partido = partidoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Partido no encontrado con ID: " + id));
+
+        return mapToResponseDTO(partido);
+    }
+
+    @Override
+    public List<UsuarioInfoDTO> sugerirJugadoresWithNames(Long partidoId, String criterio) {
+        List<Usuario> usuarios = sugerirJugadores(partidoId, criterio);
+
+        return usuarios.stream()
+                .map(UsuarioInfoDTO::from)
+                .toList();
+    }
 
 
     private PartidoDTO mapToDTO(Partido partido) {
@@ -220,5 +231,24 @@ public class PartidoServiceImpl implements PartidoService {
                 .build();
     }
 
-}
+    private PartidoResponseDTO mapToResponseDTO(Partido partido) {
+        return PartidoResponseDTO.builder()
+                .id(partido.getId())
+                .organizador(UsuarioInfoDTO.from(partido.getOrganizador()))
+                .estado(partido.getEstado())
+                .fechaHora(partido.getFechaHora())
+                .ubicacion(partido.getUbicacion() != null ? UbicacionDTO.builder()
+                        .latitud(partido.getUbicacion().getLatitud())
+                        .longitud(partido.getUbicacion().getLongitud())
+                        .build() : null)
+                .deporte(DeporteInfoDTO.from(partido.getDeporte()))
+                .jugadoresRequeridos(partido.getJugadoresRequeridos())
+                .jugadores(partido.getJugadores() != null
+                        ? partido.getJugadores().stream()
+                                .map(UsuarioInfoDTO::from)
+                                .toList()
+                        : null)
+                .build();
+    }
 
+}
