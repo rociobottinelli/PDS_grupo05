@@ -15,6 +15,7 @@ import com.pds.partidosapp.model.strategy.EmparejamientoCercania;
 import com.pds.partidosapp.model.strategy.EmparejamientoHistorial;
 import com.pds.partidosapp.repository.PartidoRepository;
 import com.pds.partidosapp.repository.UsuarioRepository;
+import com.pds.partidosapp.repository.DeporteRepository;
 import com.pds.partidosapp.service.PartidoService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class PartidoServiceImpl implements PartidoService {
 
     private final PartidoRepository partidoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final DeporteRepository deporteRepository;
 
     private final EmparejamientoNivel emparejamientoNivel;
     private final EmparejamientoCercania emparejamientoCercania;
@@ -44,7 +46,10 @@ public class PartidoServiceImpl implements PartidoService {
                 .estado(partidoDTO.getEstado())
                 .fechaHora(partidoDTO.getFechaHora())
                 .jugadoresRequeridos(partidoDTO.getJugadoresRequeridos())
-                .jugadores(new ArrayList<>())  // Inicializamos vacío, después podemos agregar el organizador si corresponde
+                .jugadores(new ArrayList<>())
+                .deporte(deporteRepository.findById(partidoDTO.getDeporteId())
+                        .orElseThrow(() -> new EntityNotFoundException("Deporte no encontrado con ID: " + partidoDTO.getDeporteId())))
+                .ubicacion(organizador.getUbicacion())
                 .build();
 
         // Opcional: agregar el organizador como primer jugador automáticamente

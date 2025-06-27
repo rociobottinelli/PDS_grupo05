@@ -3,6 +3,7 @@ package com.pds.partidosapp.dto;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import com.pds.partidosapp.model.entity.Deporte;
 
 import java.time.LocalDateTime;
 import java.util.List;
