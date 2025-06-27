@@ -7,7 +7,6 @@ import com.pds.partidosapp.repository.InvitacionRepository;
 import com.pds.partidosapp.repository.UsuarioRepository;
 import com.pds.partidosapp.service.IInvitacionService;
 import com.pds.partidosapp.service.PartidoService;
-import com.pds.partidosapp.shared.AuthUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,16 +26,19 @@ public class InvitacionController {
     private final PartidoService partidoService;
     private final InvitacionRepository invitacionRepository;
     private final UsuarioRepository usuarioRepository;
-    private final AuthUtils authUtils;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
 
     @PostMapping("/aceptar")
-    public ResponseEntity<?> aceptarInvitacion(@Valid @RequestParam Long invitacionId) {
-        Long usuarioId = authUtils.getCurrentUserId();
-
+    public ResponseEntity<?> aceptarInvitacion(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestParam Long invitacionId) {
+        
+        // Extraer el ID del usuario autenticado desde el token
+        Long usuarioId = extractUserIdFromToken(authHeader);
+        
         // Obtener la invitación por su ID
         Invitacion invitacion = invitacionRepository.findById(invitacionId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la invitación con ID: " + invitacionId));
@@ -56,10 +58,14 @@ public class InvitacionController {
     }
     
     @PostMapping("/rechazar")
-    public ResponseEntity<?> rechazarInvitacion(@Valid @RequestParam Long invitacionId) {
+    public ResponseEntity<?> rechazarInvitacion(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestParam Long invitacionId) {
         
-        Long usuarioId = authUtils.getCurrentUserId();
-
+        // Extraer el ID del usuario autenticado desde el token
+        Long usuarioId = extractUserIdFromToken(authHeader);
+        
+        // Obtener la invitación por su ID
         Invitacion invitacion = invitacionRepository.findById(invitacionId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la invitación con ID: " + invitacionId));
         
@@ -73,5 +79,21 @@ public class InvitacionController {
         
         return ResponseEntity.ok().build();
     }
+    
 
+    /**
+     * Extrae el ID del usuario del token JWT.
+     * 
+     * @param authHeader Encabezado de autorización con el token JWT
+     * @return ID del usuario
+     */
+    private Long extractUserIdFromToken(String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmail(token);
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
+
+        return usuario.getId();
+    }
 }
