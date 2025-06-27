@@ -70,11 +70,6 @@ public class PartidoServiceImpl implements PartidoService {
                 .build();
 
         partido.getJugadores().add(organizador);
-
-        // Incrementar contador de partidos del organizador
-        organizador.setCantidadPartidosJugados(organizador.getCantidadPartidosJugados() + 1);
-        usuarioRepository.save(organizador); // Persistir el cambio
-
         partido.setEstadoActual(new NecesitamosJugadores());
 
         Partido partidoGuardado = partidoRepository.save(partido);

@@ -15,7 +15,6 @@ public class UsuarioResponseDTO {
     private Integer edad;
     private NivelEnum nivelJuego;
     private Boolean activo;
-    private Integer cantidadPartidosJugados;
     private UbicacionDTO ubicacion;
 
     public static UsuarioResponseDTO from(Usuario usuario) {
@@ -34,8 +33,6 @@ public class UsuarioResponseDTO {
                 .edad(usuario.getEdad())
                 .nivelJuego(usuario.getNivelJuego())
                 .activo(usuario.getActivo())
-                .cantidadPartidosJugados(
-                        usuario.getCantidadPartidosJugados() != null ? usuario.getCantidadPartidosJugados() : 0)
                 .ubicacion(ubicacionDTO)
                 .build();
     }

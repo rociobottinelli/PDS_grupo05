@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PartidoRepository extends JpaRepository<Partido, Long> {
-    // Acá podés agregar métodos de búsqueda personalizada más adelante si lo
-    // necesitás
+    // Acá podés agregar métodos de búsqueda personalizada más adelante si lo necesitás
 }

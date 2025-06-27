@@ -2,15 +2,8 @@ package com.pds.partidosapp.model.state;
 
 import com.pds.partidosapp.model.entity.Partido;
 import com.pds.partidosapp.model.entity.Usuario;
-import com.pds.partidosapp.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
 public class NecesitamosJugadores implements EstadoPartido {
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
 
     @Override
     public void aceptar(Partido partido, Usuario jugador) {
@@ -23,10 +16,6 @@ public class NecesitamosJugadores implements EstadoPartido {
         }
 
         partido.getJugadores().add(jugador);
-
-        // Incrementar contador de partidos jugados
-        jugador.setCantidadPartidosJugados(jugador.getCantidadPartidosJugados() + 1);
-        usuarioRepository.save(jugador); // Persistir el cambio
 
         if (partido.getJugadores().size() >= partido.getJugadoresRequeridos()) {
             partido.setEstadoActual(new PartidoArmado());
