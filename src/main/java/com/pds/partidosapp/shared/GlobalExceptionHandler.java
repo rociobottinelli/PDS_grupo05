@@ -50,6 +50,17 @@ public class GlobalExceptionHandler {
         .body(buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
   }
 
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  public ResponseEntity<Map<String, Object>> handleJsonParseError(
+      org.springframework.http.converter.HttpMessageNotReadableException ex) {
+    String message = "Error en el formato del JSON. Verifica que los tipos de datos sean correctos.";
+    if (ex.getMessage().contains("deporteId")) {
+      message = "El campo deporteId debe ser un número válido, no un objeto.";
+    }
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(buildResponse(HttpStatus.BAD_REQUEST, message));
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -62,16 +73,16 @@ public class GlobalExceptionHandler {
         .body(buildResponse(HttpStatus.CONFLICT, ex.getMessage()));
   }
 
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .body(buildResponse(HttpStatus.FORBIDDEN, "Acceso denegado"));
+  }
+
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<Map<String, Object>> handleUnauthorized(BadCredentialsException ex) {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(buildResponse(HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
-  }
-
-  @ExceptionHandler(AccessDeniedException.class)
-  public ResponseEntity<Map<String, Object>> handleForbidden(AccessDeniedException ex) {
-    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-        .body(buildResponse(HttpStatus.FORBIDDEN, "Acceso denegado"));
   }
 
   @ExceptionHandler(Exception.class)

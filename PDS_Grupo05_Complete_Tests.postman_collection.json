@@ -1,0 +1,1467 @@
+{
+  "info": {
+    "_postman_id": "550e8d1b-2c3e-4d5f-8a6b-7c8d9e0f1a2b",
+    "name": "PDS Grupo05 - Complete API Tests",
+    "description": "Colección completa de pruebas para la API de Partidos Deportivos\n\n**Incluye:**\n- Sistema de autenticación JWT con cookies\n- CRUD completo de todas las entidades\n- Funcionalidades de ubicación en registro\n- Sistema de partidos con estados\n- Validaciones de jugadores duplicados\n- Respuestas autodescriptivas\n- Seguridad granular por endpoints\n\n**Instrucciones:**\n1. Ejecutar 'Setup - Register User' primero\n2. Los tokens JWT se manejan automáticamente vía cookies\n3. Seguir el orden de las carpetas para mejores resultados",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication & Setup",
+      "item": [
+        {
+          "name": "1. Register User with Location",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Registration successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Cookie token is set\", function () {",
+                  "    pm.expect(pm.response.headers.get('Set-Cookie')).to.include('partidos-token');",
+                  "});",
+                  "",
+                  "// Store user info for later tests",
+                  "pm.globals.set(\"testUserEmail\", \"juan@ejemplo.com\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombreUsuario\": \"JuanTester\",\n    \"email\": \"juan@ejemplo.com\",\n    \"password\": \"password123\",\n    \"edad\": 25,\n    \"nivelJuego\": \"INTERMEDIO\",\n    \"ubicacion\": {\n        \"latitud\": -34.6037,\n        \"longitud\": -58.3816\n    }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Register Second User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Second user registration successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombreUsuario\": \"MariaTester\",\n    \"email\": \"maria@ejemplo.com\",\n    \"password\": \"password123\",\n    \"edad\": 28,\n    \"nivelJuego\": \"AVANZADO\",\n    \"ubicacion\": {\n        \"latitud\": -34.6118,\n        \"longitud\": -58.3960\n    }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login Juan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Login message correct\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql('Login exitoso');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"juan@ejemplo.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Profile retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Profile contains user data\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.email).to.eql('juan@ejemplo.com');",
+                  "    pm.expect(responseJson.nombreUsuario).to.eql('JuanTester');",
+                  "    pm.expect(responseJson.nivel).to.eql('INTERMEDIO');",
+                  "});",
+                  "",
+                  "// Store authenticated user ID for later tests",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.globals.set(\"currentUserId\", responseJson.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/auth/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏃‍♂️ Deportes Management",
+      "item": [
+        {
+          "name": "1. Create Deporte - Fútbol",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Deporte created successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Store deporte ID for later use",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.globals.set(\"deporteFutbolId\", responseJson.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombre\": \"Fútbol\",\n    \"descripcion\": \"Deporte de equipo con balón\",\n    \"cantidadJugadores\": 11\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Deporte - Básquet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Básquet created successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.globals.set(\"deporteBasquetId\", responseJson.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombre\": \"Básquet\",\n    \"descripcion\": \"Deporte de canasta\",\n    \"cantidadJugadores\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get All Deportes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Deportes retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"At least 2 deportes exist\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.length).to.be.at.least(2);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 Users Management",
+      "item": [
+        {
+          "name": "1. Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Users retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data with ubicacion\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.length).to.be.at.least(1);",
+                  "    ",
+                  "    // Check if users have ubicacion data",
+                  "    const userWithUbicacion = responseJson.find(user => user.ubicacion);",
+                  "    if (userWithUbicacion) {",
+                  "        pm.expect(userWithUbicacion.ubicacion).to.have.property('latitud');",
+                  "        pm.expect(userWithUbicacion.ubicacion).to.have.property('longitud');",
+                  "    }",
+                  "});",
+                  "",
+                  "// Store first user ID for later tests",
+                  "if (pm.response.json().length > 0) {",
+                  "    pm.globals.set(\"firstUserId\", pm.response.json()[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get User by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"User retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"User data is complete\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('nombreUsuario');",
+                  "    pm.expect(responseJson).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/usuarios/{{firstUserId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "usuarios",
+                "{{firstUserId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Add Deporte to Current User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Verify that deporteFutbolId is set, if not set a default",
+                  "if (!pm.globals.get('deporteFutbolId')) {",
+                  "    console.log('Warning: deporteFutbolId not set, using default value 1');",
+                  "    pm.globals.set('deporteFutbolId', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Deporte added to user successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deporteId\": {{deporteFutbolId}},\n    \"nivelEnDeporte\": \"INTERMEDIO\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/usuarios/me/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "usuarios",
+                "me",
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update My Profile",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Verify that currentUserId is set",
+                  "if (!pm.globals.get('currentUserId')) {",
+                  "    console.log('Warning: currentUserId not set, using firstUserId as fallback');",
+                  "    pm.globals.set('currentUserId', pm.globals.get('firstUserId') || '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Profile updated successfully\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombreUsuario\": \"JuanTesterUpdated\",\n    \"email\": \"juan@ejemplo.com\",\n    \"edad\": 26,\n    \"nivelJuego\": \"AVANZADO\",\n    \"ubicacionId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/usuarios/{{currentUserId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "usuarios",
+                "{{currentUserId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. [SHOULD FAIL] Try to Update Another User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Update other user should fail with 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message about permissions\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.include('No puedes modificar');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombreUsuario\": \"HackerAttempt\",\n    \"email\": \"hacker@example.com\",\n    \"edad\": 99,\n    \"nivelJuego\": \"PRINCIPIANTE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/usuarios/999",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "usuarios",
+                "999"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⚽ Partidos Management",
+      "item": [
+        {
+          "name": "1. Create Partido with Descriptive Response",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Verify that required variables are set",
+                  "if (!pm.globals.get('currentUserId')) {",
+                  "    console.log('Warning: currentUserId not set, using firstUserId as fallback');",
+                  "    pm.globals.set('currentUserId', pm.globals.get('firstUserId') || '1');",
+                  "}",
+                  "if (!pm.globals.get('deporteFutbolId')) {",
+                  "    console.log('Warning: deporteFutbolId not set, using default value 1');",
+                  "    pm.globals.set('deporteFutbolId', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Partido created successfully\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is descriptive\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('organizador');",
+                  "    pm.expect(responseJson.organizador).to.have.property('id');",
+                  "    pm.expect(responseJson.organizador).to.have.property('nombre');",
+                  "    ",
+                  "    pm.expect(responseJson).to.have.property('deporte');",
+                  "    pm.expect(responseJson.deporte).to.have.property('id');",
+                  "    pm.expect(responseJson.deporte).to.have.property('nombre');",
+                  "    ",
+                  "    pm.expect(responseJson).to.have.property('ubicacion');",
+                  "    pm.expect(responseJson.ubicacion).to.have.property('latitud');",
+                  "    pm.expect(responseJson.ubicacion).to.have.property('longitud');",
+                  "});",
+                  "",
+                  "// Store partido ID for later tests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.globals.set(\"partidoId\", responseJson.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fechaHora\": \"2025-12-20T15:00:00\",\n    \"estado\": \"NECESITAMOS_JUGADORES\",\n    \"jugadoresRequeridos\": 2,\n    \"organizadorId\": {{currentUserId}},\n    \"deporteId\": {{deporteFutbolId}},\n    \"ubicacionId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/partidos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Partido with Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Partido retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Partido has descriptive data\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.organizador.nombre).to.be.a('string');",
+                  "    pm.expect(responseJson.deporte.nombre).to.be.a('string');",
+                  "    pm.expect(responseJson.estado).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.5. Switch to Maria (Second User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Maria login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains JWT\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.token).to.be.a('string');",
+                  "    pm.expect(responseJson.token.length).to.be.above(10);",
+                  "});",
+                  "",
+                  "// Extract the JWT token and set it as a header for subsequent requests",
+                  "const responseJson = pm.response.json();",
+                  "pm.globals.set(\"jwt_token\", responseJson.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"maria@ejemplo.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Accept Partido (Join as Player)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Partido acceptance successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"User added to jugadores list\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.jugadores).to.be.an('array');",
+                  "    pm.expect(responseJson.jugadores.length).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}/aceptar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}",
+                "aceptar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.5. Switch back to Juan (Original Organizer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Juan login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Extract the JWT token and set it as a header for subsequent requests",
+                  "const responseJson = pm.response.json();",
+                  "pm.globals.set(\"jwt_token\", responseJson.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"juan@ejemplo.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. [SHOULD FAIL] Try to Join Same Partido Again",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Duplicate join should fail with 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message about duplicate\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.include('ya está');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}/aceptar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}",
+                "aceptar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Player Suggestions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Suggestions retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Suggestions have descriptive names\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.length > 0) {",
+                  "        pm.expect(responseJson[0]).to.have.property('id');",
+                  "        pm.expect(responseJson[0]).to.have.property('nombre');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}/sugerencias?criterio=nivel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}",
+                "sugerencias"
+              ],
+              "query": [
+                {
+                  "key": "criterio",
+                  "value": "nivel"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Start Partido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Partido started successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estado changed to PARTIDO_EN_JUEGO\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.estado).to.eql('PARTIDO_EN_JUEGO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}/iniciar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}",
+                "iniciar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Finish Partido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Partido finished successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estado changed to PARTIDO_FINALIZADO\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.estado).to.eql('PARTIDO_FINALIZADO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/partidos/{{partidoId}}/finalizar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "partidos",
+                "{{partidoId}}",
+                "finalizar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💬 Comentarios System",
+      "item": [
+        {
+          "name": "1. Add Comment to Partido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Comment added successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Success message received\", function () {",
+                  "    pm.expect(pm.response.text()).to.include('Comentario guardado con éxito');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comentario\": \"¡Excelente partido! Muy bien organizado y todos jugaron genial.\",\n    \"resenia\": 5.0\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/comentarios/{{partidoId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "comentarios",
+                "{{partidoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Comments from Partido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Comments retrieved successfully\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"At least one comment exists\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "    pm.expect(responseJson.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test(\"Comment has required fields\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.length > 0) {",
+                  "        const comment = responseJson[0];",
+                  "        pm.expect(comment).to.have.property('comentario');",
+                  "        pm.expect(comment).to.have.property('resenia');",
+                  "        pm.expect(comment).to.have.property('usuarioOrigen');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/comentarios/{{partidoId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "comentarios",
+                "{{partidoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔒 Security & Edge Cases",
+      "item": [
+        {
+          "name": "1. [PUBLIC] Get Deportes without Authentication",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Clear cookies to test public access",
+                  "pm.cookies.clear();"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Public GET access works\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Deportes data is accessible\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. [SHOULD FAIL] Create Deporte without Authentication",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create without auth should fail with 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombre\": \"Tenis\",\n    \"descripcion\": \"Deporte de raqueta\",\n    \"cantidadJugadores\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/deportes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "deportes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. [SHOULD FAIL] Invalid Login Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalid login should fail with 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message about credentials\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.include('Email o contraseña incorrectos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"hacker@ejemplo.com\",\n    \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. [SHOULD FAIL] Register with Invalid Ubicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalid location should fail with 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error message present\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('fields');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombreUsuario\": \"InvalidUser\",\n    \"email\": \"invalid@ejemplo.com\",\n    \"password\": \"password123\",\n    \"edad\": 25,\n    \"nivelJuego\": \"INTERMEDIO\",\n    \"ubicacion\": {\n        \"latitud\": 999.999,\n        \"longitud\": -999.999\n    }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔄 Cleanup & Logout",
+      "item": [
+        {
+          "name": "1. Re-login Juan for Final Tests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Re-login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"juan@ejemplo.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Logout successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Logout message correct\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql('Logout exitoso');",
+                  "});",
+                  "",
+                  "pm.test(\"Cookie cleared\", function () {",
+                  "    pm.expect(pm.response.headers.get('Set-Cookie')).to.include('partidos-token=');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. [SHOULD FAIL] Access Protected Resource After Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Access after logout should fail with 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/auth/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script for all requests",
+          "console.log('Executing request: ' + pm.info.requestName);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for all requests",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON or text', function () {",
+          "    try {",
+          "        pm.response.json();",
+          "    } catch (e) {",
+          "        // If not JSON, should at least be text",
+          "        pm.expect(pm.response.text()).to.be.a('string');",
+          "    }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "testUserEmail",
+      "value": "juan@ejemplo.com",
+      "type": "string"
+    }
+  ]
+}

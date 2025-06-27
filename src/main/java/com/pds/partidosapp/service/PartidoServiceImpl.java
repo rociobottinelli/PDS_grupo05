@@ -56,6 +56,9 @@ public class PartidoServiceImpl implements PartidoService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Deporte no encontrado con ID: " + partidoDTO.getDeporteId()));
 
+        // Validar conflictos de horario
+        validarConflictoDeHorario(organizador, partidoDTO.getFechaHora());
+
         Partido partido = Partido.builder()
                 .organizador(organizador)
                 .estado(partidoDTO.getEstado())
@@ -215,7 +218,6 @@ public class PartidoServiceImpl implements PartidoService {
                 .toList();
     }
 
-
     private PartidoDTO mapToDTO(Partido partido) {
         return PartidoDTO.builder()
                 .id(partido.getId())
@@ -249,6 +251,40 @@ public class PartidoServiceImpl implements PartidoService {
                                 .toList()
                         : null)
                 .build();
+    }
+
+    /**
+     * Valida que el organizador no tenga un partido en exactamente la misma fecha y
+     * hora.
+     * Esto previene spam de partidos duplicados.
+     */
+    private void validarConflictoDeHorario(Usuario organizador, java.time.LocalDateTime fechaHora) {
+        if (fechaHora == null) {
+            return; // Si no hay fecha, no hay conflicto
+        }
+
+        // Buscar partidos del mismo organizador en la misma fecha y hora exactas
+        // Usar findAll() pero con filtros eficientes en memoria
+        boolean tieneConflicto = partidoRepository.findAll()
+                .stream()
+                .anyMatch(partido -> partido.getOrganizador() != null &&
+                        partido.getOrganizador().getId().equals(organizador.getId()) &&
+                        partido.getFechaHora() != null &&
+                        partido.getFechaHora().equals(fechaHora) &&
+                        !esPartidoCancelado(partido.getEstado()));
+
+        if (tieneConflicto) {
+            throw new IllegalStateException(
+                    "Ya tienes un partido programado para exactamente esa fecha y hora. " +
+                            "Por favor, elige un horario diferente.");
+        }
+    }
+
+    /**
+     * Verifica si un partido está en estado cancelado
+     */
+    private boolean esPartidoCancelado(String estado) {
+        return "PARTIDO_CANCELADO".equals(estado);
     }
 
 }

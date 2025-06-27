@@ -1,37 +1,28 @@
 package com.pds.partidosapp.controller;
 
-import com.pds.partidosapp.config.JwtTokenProvider;
 import com.pds.partidosapp.dto.AddDeporteToUsuarioDTO;
-import com.pds.partidosapp.dto.RegisterDTO;
 import com.pds.partidosapp.dto.UpdateUsuarioDTO;
 import com.pds.partidosapp.dto.UsuarioResponseDTO;
 import com.pds.partidosapp.enums.NivelEnum;
 import com.pds.partidosapp.model.entity.Usuario;
-import com.pds.partidosapp.repository.UsuarioRepository;
 import com.pds.partidosapp.service.IUsuarioService;
-import com.pds.partidosapp.shared.exceptions.NotFoundException;
-import jakarta.persistence.EntityNotFoundException;
+import com.pds.partidosapp.shared.AuthUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     private final IUsuarioService usuarioService;
-    private final UsuarioRepository usuarioRepository;
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final AuthUtils authUtils;
 
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> getAll(
@@ -52,43 +43,35 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody @Valid UpdateUsuarioDTO dto) {
+        if (!authUtils.canModifyResource(id)) {
+            throw new AccessDeniedException("No puedes modificar el perfil de otro usuario");
+        }
+
         usuarioService.updateUser(id, dto);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+        if (!authUtils.canModifyResource(id)) {
+            throw new AccessDeniedException("No puedes eliminar el perfil de otro usuario");
+        }
+
         usuarioService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/me/deportes")
     public ResponseEntity<Void> agregarDeporteAlUsuarioActual(
-            @RequestHeader("Authorization") String authHeader,
             @RequestBody @Valid AddDeporteToUsuarioDTO dto) {
-        // Obtener el ID del usuario autenticado
-        Long idUsuarioActual = extractUserIdFromToken(authHeader);
-        Usuario usuario = usuarioRepository.findById(idUsuarioActual)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        
-        // Llamar al servicio para agregar el deporte
+
+        Usuario usuario = authUtils.getCurrentUser();
+
         usuarioService.agregarDeporteAUsuario(
                 usuario.getId(),
                 dto.getDeporteId(),
-                dto.getNivelEnDeporte()
-        );
-        
+                dto.getNivelEnDeporte());
+
         return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-
-    private Long extractUserIdFromToken(String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        String email = jwtTokenProvider.getEmail(token);
-
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
-
-        return usuario.getId();
     }
 }
