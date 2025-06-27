@@ -16,11 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controlador para gestionar las operaciones relacionadas con las invitaciones.
- * Proporciona endpoints para crear, leer, actualizar y eliminar invitaciones,
- * así como para aceptar o rechazar invitaciones existentes.
- */
+
 @RestController
 @RequestMapping("/api/invitaciones")
 @RequiredArgsConstructor
@@ -35,12 +31,6 @@ public class InvitacionController {
     private JwtTokenProvider jwtTokenProvider;
 
 
-    /**
-     * Acepta una invitación.
-     * 
-     * @param authHeader Encabezado de autorización con el token JWT
-     * @return Respuesta vacía con código 200 (OK)
-     */
     @PostMapping("/aceptar")
     public ResponseEntity<?> aceptarInvitacion(
             @RequestHeader("Authorization") String authHeader,
@@ -67,12 +57,6 @@ public class InvitacionController {
         return ResponseEntity.ok().build();
     }
     
-    /**
-     * Rechaza una invitación.
-     * 
-     * @param authHeader Encabezado de autorización con el token JWT
-     * @return Respuesta vacía con código 200 (OK)
-     */
     @PostMapping("/rechazar")
     public ResponseEntity<?> rechazarInvitacion(
             @RequestHeader("Authorization") String authHeader,

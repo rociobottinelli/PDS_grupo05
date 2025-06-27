@@ -4,10 +4,6 @@ import com.pds.partidosapp.model.Notificacion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-/**
- * Estrategia de notificación que simula el envío de notificaciones a través de Firebase.
- * En una implementación real, se integraría con Firebase Cloud Messaging (FCM).
- */
 @Slf4j
 @Component
 public class NotificarPorFirebase implements EstrategiaDeNotificacion {

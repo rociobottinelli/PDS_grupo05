@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-/**
- * Estrategia de notificación que envía notificaciones por correo electrónico.
- * Utiliza un adaptador de correo electrónico para enviar los mensajes.
- */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
